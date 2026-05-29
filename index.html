@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <script>
+      // Fix: Some external scripts try to set globalThis.fetch, causing a TypeError if it's getter-only.
+      // We will provide a setter.
+      try {
+        var _originalFetch = window.fetch;
+        Object.defineProperty(window, 'fetch', {
+          get: function() { return _originalFetch; },
+          set: function(val) { _originalFetch = val; },
+          configurable: true,
+          enumerable: true
+        });
+      } catch (e) {
+        console.warn("Could not redefine window.fetch with a setter:", e);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

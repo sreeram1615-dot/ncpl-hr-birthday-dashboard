@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "An employee in the NCPL system.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The full name of the employee."
+        },
+        "department": {
+          "type": "string",
+          "description": "The department the employee works in."
+        },
+        "birthdate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The birthdate of the employee."
+        },
+        "avatar": {
+          "type": "string",
+          "description": "URL to the employee's avatar image."
+        },
+        "uploadedPhotos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of base64 strings or URLs for uploaded photos."
+        },
+        "uploadedLogo": {
+          "type": "string",
+          "description": "Base64 string or URL for the uploaded logo."
+        },
+        "generatedAssets": {
+          "type": "object",
+          "description": "Generated birthday assets."
+        },
+        "uid": {
+          "type": "string",
+          "description": "The UID of the user who created this employee record."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the employee."
+        },
+        "whatsapp": {
+          "type": "string",
+          "description": "The WhatsApp number of the employee."
+        }
+      },
+      "required": ["name", "department", "birthdate"]
+    }
+  },
+  "firestore": {
+    "/employees/{employeeId}": {
+      "schema": {
+        "$ref": "#/entities/Employee"
+      },
+      "description": "Collection of employees."
+    }
+  }
+}

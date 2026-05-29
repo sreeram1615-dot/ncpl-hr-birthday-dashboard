@@ -1,0 +1,5 @@
+{
+  "name": "NCPL HR Birthday Dashboard",
+  "description": "HR dashboard for generating personalized birthday videos, flyers, and reminders for NCPL employees.",
+  "requestFramePermissions": []
+}

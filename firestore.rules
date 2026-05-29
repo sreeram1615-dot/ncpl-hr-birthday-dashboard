@@ -1,0 +1,100 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: employees
+    // Document ID: {employeeId}
+    // Fields:
+    //   - name: string (required) - The full name of the employee.
+    //   - department: string (required) - The department the employee works in.
+    //   - birthdate: string (required) - The birthdate of the employee.
+    //   - avatar: string (optional) - URL to the employee's avatar image.
+    //   - uploadedPhotos: list (optional) - Array of base64 strings or URLs for uploaded photos.
+    //   - uploadedLogo: string (optional) - Base64 string or URL for the uploaded logo.
+    //   - generatedAssets: map (optional) - Generated birthday assets.
+    //   - uid: string (required) - The UID of the user who created this employee record.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidString(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+             request.resource.data[field].size() >= minLen &&
+             request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() >= minLen &&
+              request.resource.data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalList(field, maxSize) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             (request.resource.data[field] is list &&
+              request.resource.data[field].size() <= maxSize);
+    }
+
+    function isValidOptionalMap(field) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == null ||
+             (request.resource.data[field] is map);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidEmployee() {
+      return hasRequiredFields(['name', 'department', 'birthdate', 'uid']) &&
+             isValidString('name', 1, 100) &&
+             isValidString('department', 1, 100) &&
+             isValidString('birthdate', 1, 50) &&
+             isValidString('uid', 1, 128) &&
+             isValidOptionalString('avatar', 0, 1000) &&
+             isValidOptionalString('email', 0, 200) &&
+             isValidOptionalString('whatsapp', 0, 50) &&
+             isValidOptionalList('uploadedPhotos', 10) &&
+             isValidOptionalString('uploadedLogo', 0, 1000000) && // Allow large base64 strings
+             isValidOptionalMap('generatedAssets');
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /employees/{employeeId} {
+      allow read: if isAuthenticated(); // Allow all authenticated users to read employees
+      allow create: if isAuthenticated() && isValidEmployee() && uidUnchanged();
+      allow update: if isAuthenticated() && isValidEmployee() && uidNotModified();
+      allow delete: if isAuthenticated(); // Allow all authenticated users to delete (or restrict to owner if preferred)
+    }
+  }
+}
